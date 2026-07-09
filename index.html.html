@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة جداول المعاهد الأزهرية الرقمية - الحصص المشتركة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2980b9;
+            --primary-dark: #1f618d;
+            --secondary: #27ae60;
+            --accent: #8e44ad;
+            --warning: #e67e22;
+            --danger: #c62828;
+            --bg-body: #f4f7f6;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 10px;
+            color: #2c3e50;
+        }
+
+        /* واجهة التفعيل الحصينة */
+        #activationOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1e4d75;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+
+        .activation-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin: 20px;
+        }
+
+        .activation-card h2 {
+            color: #2b7bb9;
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .activation-card p {
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .activation-input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #333;
+            margin-bottom: 20px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .activation-input:focus { border-color: #2b7bb9; }
+
+        .activation-btn {
+            width: 100%;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .activation-btn:hover { background-color: #219653; }
+        .act-error { color: #c0392b; font-size: 14px; font-weight: bold; margin-top: 15px; display: none; }
+        .act-success { color: #27ae60; font-size: 14px; font-weight: bold; margin-top: 15px; display: none; }
+
+        /* واجهة المنظومة الأساسية */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            display: none; /* مخفية حتى يتم التحقق */
+        }
+
+        .header-logo {
+            text-align: center;
+            border-bottom: 2px dashed #bdc3c7;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .header-logo h1 { 
+            margin: 5px 0; 
+            color: var(--primary); 
+            font-size: 24px; 
+            font-weight: 800; 
+            line-height: 1.4; 
+        }
+        .header-logo h2 { 
+            margin: 5px 0; 
+            color: #7f8c8d; 
+            font-size: 15px; 
+            font-weight: 600; 
+        }
+        .cloud-status {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-top: 8px;
+            background: #e8f8f5;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #a3e4d7;
+        }
+        
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 1200px) {
+            body { padding: 25px; }
+            .container { padding: 35px; display: none; }
+            .workspace { grid-template-columns: 3.2fr 1.2fr; }
+            .header-logo h1 { font-size: 28px; }
+        }
+        
+        .main-panel { min-width: 0; }
+        .side-panel { 
+            background: #f8f9fa; 
+            border: 1px solid #e2e8f0; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-sizing: border-box;
+            height: fit-content;
+        }
+
+        .dashboard-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card-setup { border-top: 4px solid var(--secondary); }
+        .card-smart { border-top: 4px solid var(--accent); }
+        .card-actions { border-top: 4px solid var(--warning); }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-setup .card-title { color: var(--secondary); }
+        .card-smart .card-title { color: var(--accent); }
+        .card-actions .card-title { color: var(--warning); }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .setup-group { display: flex; flex-direction: column; gap: 6px; }
+        .setup-group label { font-weight: 700; color: #34495e; font-size: 13px; }
+        .setup-group input, .setup-group select { 
+            font-family: 'Cairo', sans-serif; 
+            padding: 10px 12px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 14px; 
+            background-color: #fff;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .setup-group input:focus, .setup-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
+        }
+
+        .btn {
+            font-family: 'Cairo', sans-serif;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn:active { transform: translateY(1px); }
+        
+        .btn-print { background-color: var(--secondary); color: white; }
+        .btn-print:hover { background-color: #219653; }
+        
+        .btn-save { background-color: var(--primary); color: white; }
+        .btn-save:hover { background-color: var(--primary-dark); }
+        
+        .btn-swap { background-color: var(--accent); color: white; }
+        .btn-swap:hover { background-color: #732d91; }
+        
+        .btn-add { background-color: #16a085; color: white; width: 100%; margin-top: 8px; }
+        .btn-add:hover { background-color: #117a65; }
+        
+        .btn-danger { background-color: var(--danger); color: white; width: 100%; margin-top: 30px; }
+        .btn-danger:hover { background-color: #b71c1c; }
+        
+        .btn-json { background-color: #34495e; color: white; width: 100%; margin-top: 10px; }
+        .btn-json:hover { background-color: #2c3e50; }
+
+        .btn-view-1 { background-color: #34495e; color: white; }
+        .btn-view-1:hover { background-color: #2c3e50; }
+        
+        .btn-view-2 { background-color: #7f8c8d; color: white; }
+        .btn-view-2:hover { background-color: #6c7a7d; }
+
+        .btn-stats { background-color: #2c3e50; color: white; }
+        .btn-stats:hover { background-color: #1a252f; }
+
+        .print-management-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            background: white;
+        }
+
+        .main-table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        .main-table th, .main-table td { border: 1px solid #e2e8f0; padding: 10px 6px; text-align: center; }
+        .main-table th { background-color: var(--primary); color: white; font-size: 14px; font-weight: 700; }
+        .main-table tbody tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .cell-container { display: flex; flex-direction: column; gap: 4px; }
+        .half-slot-box {
+            border: 1px dotted #bdc3c7;
+            padding: 4px;
+            border-radius: 6px;
+            background-color: #fafafa;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .half-slot-box.second-half {
+            border-top: 2px dashed var(--primary);
+            background-color: #fcfcfc;
+            margin-top: 2px;
+        }
+        .half-slot-box.second-half {
+            border-top: 2px dashed var(--primary);
+            background-color: #fcfcfc;
+            margin-top: 2px;
+        }
+        .half-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #7f8c8d;
+            text-align: right;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .select-schedule {
+            font-family: 'Cairo', sans-serif;
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #34495e;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .select-teacher {
+            font-family: 'Cairo', sans-serif;
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            background-color: #f8fafc;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .side-box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        .side-box h3 { margin-top: 0; margin-bottom: 10px; font-size: 14px; font-weight: 700; border-bottom: 2px solid #edf2f7; padding-bottom: 6px; }
+        
+        .bulk-textarea {
+            width: 100%;
+            height: 75px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+        }
+        .list-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+            margin-top: 8px;
+            padding: 6px;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .btn-del-item { background: none; border: none; color: var(--danger); cursor: pointer; font-weight: 700; font-size: 16px; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 14px;
+            width: 90%;
+            max-width: 580px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal-header { font-weight: 700; color: var(--warning); font-size: 16px; margin-bottom: 20px; border-bottom: 2px solid #fee2e2; padding-bottom: 8px; }
+        .modal-body { display: flex; flex-direction: column; gap: 12px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+        
+        .stats-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .stats-table th, .stats-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
+        .stats-table th { background-color: var(--primary); color: white; font-weight: 700; }
+
+        .swap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; }
+        .swap-section-title { grid-column: span 2; font-weight: bold; font-size: 14px; color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="activationOverlay">
+    <div class="activation-card">
+        <h2>🔒 تفعيل النسخة المعتمدة</h2>
+        <p>يرجى إدخال كود التفعيل الخاص بالمنظومة للوصول إلى لوحة إدارة الجداول السحابية.</p>
+        <input type="text" id="activationCodeInput" class="activation-input" placeholder="123456" autocomplete="off">
+        <button id="btnVerifyActivation" class="activation-btn">🚀 تحقق وتفعيل المنظومة الآن</button>
+        <div id="actErrorMsg" class="act-error">❌ كود التفعيل غير صحيح أو غير موجود بالخادم!</div>
+        <div id="actSuccessMsg" class="act-success">✅ تم تفعيل المنظومة بنجاح! جاري تحميل النظام...</div>
+    </div>
+</div>
+
+<div class="container" id="mainAppContainer">
+    <div class="header-logo">
+        <h1>المنظومة الرقمية الموحدة لإعداد جداول الحصص بالمعاهد الأزهرية</h1>
+        <h2 id="dynamicHeaderTitle">معهد الطويلة الابتدائي</h2>
+        <div class="cloud-status" id="syncStatus">🔄 جاري الاتصال بقاعدة البيانات السحابية الموحدة...</div>
+    </div>
+
+    <div class="workspace">
+        <div class="main-panel">
+            
+            <div class="dashboard-card card-setup">
+                <div class="card-title">⚙️ الإعدادات الهيكلية والمواقيت التلقائية</div>
+                <div class="grid-inputs">
+                    <div class="setup-group">
+                        <label>🏛️ المعهد الدراسي الحالي:</label>
+                        <input type="text" id="instName" value="معهد الطويلة الابتدائي" onchange="triggerInstituteSwitch()" style="border: 1px solid var(--secondary); background: #f4fbf7;">
+                    </div>
+                    <div class="setup-group">
+                        <label>⏱️ نظام حصص اليوم:</label>
+                        <select id="maxPeriodsSelect" onchange="changePeriodsCount()">
+                            <option value="5">٥ حصص في اليوم</option>
+                            <option value="6">٦ حصص في اليوم</option>
+                            <option value="7" selected>٧ حصص في اليوم (الافتراضي)</option>
+                            <option value="8">٨ حصص في اليوم</option>
+                        </select>
+                    </div>
+                    <div class="setup-group">
+                        <label>📂 نوع وضبط الجدول النشط:</label>
+                        <select id="scheduleTypeSelect" onchange="switchScheduleType()" style="border: 1px solid var(--primary); background: #f0f7fc;">
+                            <option value="original">✅ الجدول الأصلي (الأساسي المعتمد)</option>
+                            <option value="alternative">🔄 الجدول البديل (طوارئ وتناوب المعلمين)</option>
+                        </select>
+                    </div>
+                    <div class="setup-group">
+                        <label>🔍 اختيار الفصل الحالي:</label>
+                        <select id="classSelect" onchange="switchClass()"></select>
+                    </div>
+                    <div class="setup-group">
+                        <label>⏰ بداية الحصة الأولى:</label>
+                        <input type="time" id="startTimeInput" value="07:45" onchange="recalculateTimeSlots()">
+                    </div>
+                    <div class="setup-group">
+                        <label>⏱️ زمن الحصة الدراسية (بالدقائق):</label>
+                        <input type="number" id="periodDurationInput" value="45" min="20" max="90" onchange="recalculateTimeSlots()">
+                    </div>
+                    <div class="setup-group">
+                        <label> Sandwich مدة الفسحة المدرسية:</label>
+                        <select id="fushaDurationSelect" onchange="recalculateTimeSlots()">
+                            <option value="10">١٠ دقائق</option>
+                            <option value="15">١٥ دقيقة</option>
+                            <option value="30" selected>٣٠ دقيقة</option>
+                        </select>
+                    </div>
+                    <div class="setup-group">
+                        <label>📌 ترتيب موقع الفسحة:</label>
+                        <select id="fushaPlaceSelect" onchange="recalculateTimeSlots()">
+                            <option value="2">بعد الحصة الثانية</option>
+                            <option value="3" selected>بعد الحصة الثالثة</option>
+                            <option value="4">بعد الحصة الرابعة</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card card-actions">
+                <div class="card-title">🛠️ خيارات الإدارة، الطباعة والمزامنة السحابية</div>
+                <div class="print-management-zone">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; width: 100%;">
+                        <button class="btn btn-view-1" onclick="printFullInstituteMonthlySchedule()">📅 طباعة الجدول الشامل لكافة الفصول (النسخة الكاملة)</button>
+                        <button class="btn btn-view-2" onclick="printFullInstituteDailySchedule()">📋 طباعة كشف المتابعة اليومي الموحد للمعهد</button>
+                    </div>
+
+                    <div style="border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 5px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-swap" onclick="openSwapModal()">🔄 تبديل حصة بين فصلين / معلمين</button>
+                        <button class="btn btn-stats" onclick="openStatsModal()">📊 عرض الإحصاء الشامل لنصاب المعلمين</button>
+                        <button class="btn btn-save" onclick="saveCurrentSchedule()">☁️ حفظ ومزامنة هذا الفصل سحابياً الآن</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="currentEditingTitle" style="color:var(--primary); margin: 25px 0 10px 0; font-size:16px; text-align:center; font-weight:800;">📍 جدول الفصل النشط</h3>
+            
+            <div class="table-responsive">
+                <table class="main-table">
+                    <thead id="tableHeadZone"></thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="side-box" style="border-top: 3px solid #16a085; background: #fafdfc;">
+                <h3>👨‍🏫 طباعة جدول معلمين مزدوج</h3>
+                <select id="printTeacherSelect1" style="width:100%; padding:8px; font-family:'Cairo'; font-weight:bold; margin-bottom:6px; border:1px solid #16a085; border-radius:6px;"></select>
+                <div style="text-align:center; font-weight:bold; margin:3px 0; font-size:12px; color:#555;">مقارنة مع:</div>
+                <select id="printTeacherSelect2" style="width:100%; padding:8px; font-family:'Cairo'; font-weight:bold; margin-bottom:10px; border:1px solid #16a085; border-radius:6px;"></select>
+                <button class="btn btn-print" style="background-color:#16a085; width:100%;" onclick="printDoubleTeacherTeacherSchedule()">🖨️ طباعة جدول المعلمين</button>
+            </div>
+
+            <div class="side-box">
+                <h3 style="color: var(--warning);">🏫 استيراد الفصول دفعة واحدة</h3>
+                <textarea id="bulkClassInput" class="bulk-textarea" placeholder="اكتب الفصول هنا، كل فصل في سطر منفصل"></textarea>
+                <button class="btn btn-add" style="background-color:var(--warning);" onclick="addBulkItems('class')">📥 استيراد قائمة الفصول</button>
+                <div class="list-box" id="classesList"></div>
+            </div>
+
+            <div class="side-box">
+                <h3 style="color: var(--primary);">📚 استيراد المواد دفعة واحدة</h3>
+                <textarea id="bulkSubjectInput" class="bulk-textarea" placeholder="انسخ أسماء المواد وضعها هنا مباشرة"></textarea>
+                <button class="btn btn-add" style="background-color:var(--primary);" onclick="addBulkItems('subject')">📥 استيراد قائمة المواد</button>
+                <div class="list-box" id="subjectsList"></div>
+            </div>
+
+            <div class="side-box">
+                <h3 style="color: var(--accent);">👨‍🏫 استيراد قائمة المعلمين والتخصص</h3>
+                <textarea id="bulkTeacherInput" class="bulk-textarea" placeholder="مثال: أحمد محمود - لغة عربية"></textarea>
+                <button class="btn btn-add" style="background-color:var(--accent);" onclick="addBulkItems('teacher')">📥 استيراد المعلمين بالتخصص</button>
+                <div class="list-box" id="teachersList"></div>
+            </div>
+
+            <button class="btn btn-danger" onclick="secureClearAllData()">⚠️ مسح الشاشات وإعادة الضبط الشامل</button>
+            
+            <button class="btn btn-json" onclick="exportDataToJSON()">📥 تصدير البيانات (JSON)</button>
+            <button class="btn btn-json" style="background-color: #7f8c8d;" onclick="document.getElementById('jsonFileInput').click()">📤 استيراد ملف (JSON)</button>
+            <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="importDataFromJSON(event)">
+        </div>
+    </div>
+</div>
+
+<div id="statsModal" class="modal">
+    <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-header" style="color: var(--primary); border-bottom-color: #d2e4f1;">📊 بيان الإحصاء الشامل لعدد الحصص (نصاب المعلمين للجدول النشط الحالي)</div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>👨‍🏫 اسم المعلم</th>
+                        <th>📚 التخصص المالي/الفعلي</th>
+                        <th>🔢 إجمالي فترات الحصص (تشمل الأنصاف والكاملة)</th>
+                    </tr>
+                </thead>
+                <tbody id="statsTableBody"></tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" style="margin: 0; background-color: var(--primary); color: white;" onclick="closeStatsModal()">إغلاق النافذة</button>
+        </div>
+    </div>
+</div>
+
+<div id="swapModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="color: var(--accent); border-bottom-color: #f3e5f5;">🔄 نافذة التبديل والمبادلة الذكية للحصص الدراسية</div>
+        <div class="modal-body">
+            <div class="swap-grid">
+                <div class="swap-section-title">📍 الحصة الأولى (المراد نقلها أو تبديلها)</div>
+                <div class="setup-group">
+                    <label>🏛️ الفصل الأول:</label>
+                    <select id="swapClass1"></select>
+                </div>
+                <div class="swap-section-title">📅 اليوم:</label>
+                    <select id="swapDay1">
+                        <option value="الأحد">الأحد</option>
+                        <option value="الإثنين">الإثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                    </select>
+                </div>
+                <div class="setup-group" style="grid-column: span 2;">
+                    <label>🔢 رقم الحصة:</label>
+                    <select id="swapPeriod1"></select>
+                </div>
+            </div>
+
+            <div class="swap-grid" style="margin-top:15px;">
+                <div class="swap-section-title">🔄 الحصة الثانية (المستهدفة للبدل معها)</div>
+                <div class="setup-group">
+                    <label>🏛️ الفصل الثاني:</label>
+                    <select id="swapClass2"></select>
+                </div>
+                <div class="swap-section-title">📅 اليوم:</label>
+                    <select id="swapDay2">
+                        <option value="الأحد">الأحد</option>
+                        <option value="الإثنين">الإثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                    </select>
+                </div>
+                <div class="setup-group" style="grid-column: span 2;">
+                    <label>🔢 رقم الحصة:</label>
+                    <select id="swapPeriod2"></select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-swap" style="margin: 0;" onclick="executeSlotsSwap()">🚀 تنفيـذ التبديل والمزامنة الآن</button>
+            <button class="btn" style="margin: 0; background-color: #7f8c8d; color: white;" onclick="closeSwapModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { databaseURL: "https://azhar-schedule-2027-default-rtdb.firebaseio.com/" };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db);
+
+    const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    const periodNames = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "السابعة", "الثامنة"];
+    const SECURITY_PIN = "1234";
+
+    let dualStructureSchedules = { original: {}, alternative: {} };
+    let classes = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2"];
+    let subjects = ["دين", "متعدد", "قرآن كريم", "لغة عربية", "رياضيات", "إنجليزي"];
+    let teachers = [
+        { name: "أحمد محمود", subject: "دين" },
+        { name: "محمد السعيد", subject: "متعدد" }
+    ];
+    
+    let maxPeriods = 7; 
+    let generatedSlots = []; 
+
+    function makeSafeKey(name) { return name.replace(/[\/\.\#\$\[\]]/g, '-'); }
+
+    // دالة الحصول على المسار السحابي المعزول لكل معهد بناءً على اسمه الحركي
+    function getInstituteNodePath() {
+        const instName = document.getElementById('instName').value.trim() || "معهد-افتراضي";
+        return "institutes/" + makeSafeKey(instName);
+    }
+
+    function checkSystemActivation() {
+        if (localStorage.getItem('system_is_activated') === 'true') {
+            document.getElementById('activationOverlay').style.display = 'none';
+            document.getElementById('mainAppContainer').style.display = 'block';
+            fetchCloudData();
+        } else {
+            document.getElementById('activationOverlay').style.display = 'flex';
+            document.getElementById('mainAppContainer').style.display = 'none';
+        }
+    }
+
+    document.getElementById('btnVerifyActivation').addEventListener('click', () => {
+        const inputCode = document.getElementById('activationCodeInput').value.trim();
+        const errElement = document.getElementById('actErrorMsg');
+        const succElement = document.getElementById('actSuccessMsg');
+
+        errElement.style.display = 'none';
+        succElement.style.display = 'none';
+
+        if(inputCode === "") {
+            errElement.innerText = "❌ يرجى كتابة كود التفعيل أولاً!";
+            errElement.style.display = 'block';
+            return;
+        }
+
+        get(child(dbRef, `activation_codes/${inputCode}`)).then((snapshot) => {
+            if(snapshot.exists()) {
+                const status = snapshot.val();
+                if(status === "true" || status === true || status === "active") {
+                    succElement.style.display = 'block';
+                    localStorage.setItem('system_is_activated', 'true');
+                    setTimeout(() => {
+                        checkSystemActivation();
+                    }, 1500);
+                } else {
+                    errElement.innerText = "❌ كود التفعيل منتهي الصلاحية أو تم إيقافه على الرابط الجديد!";
+                    errElement.style.display = 'block';
+                }
+            } else {
+                errElement.innerText = "❌ كود التفعيل غير صحيح أو غير موجود بالخادم الجديد!";
+                errElement.style.display = 'block';
+            }
+        }).catch((err) => {
+            console.error(err);
+            errElement.innerText = "❌ حدث خطأ، تأكد من إعدادات الـ Rules في Firebase للمسار الجديد.";
+            errElement.style.display = 'block';
+        });
+    });
+
+    function timeToMinutes(timeStr) { const [hours, minutes] = timeStr.split(':').map(Number); return hours * 60 + minutes; }
+    function minutesToTimeString(totalMinutes) {
+        let hours = Math.floor(totalMinutes / 60); const minutes = totalMinutes % 60; const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12; hours = hours ? hours : 12; return `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+    }
+
+    window.recalculateTimeSlots = function() {
+        const startTimeStr = document.getElementById('startTimeInput').value;
+        const fushaDuration = parseInt(document.getElementById('fushaDurationSelect').value);
+        const fushaAfterPeriod = parseInt(document.getElementById('fushaPlaceSelect').value);
+        const periodDuration = parseInt(document.getElementById('periodDurationInput').value) || 45; 
+
+        generatedSlots = []; let currentMinutes = timeToMinutes(startTimeStr);
+        for (let p = 1; p <= 8; p++) {
+            let startStr = minutesToTimeString(currentMinutes); currentMinutes += periodDuration; let endStr = minutesToTimeString(currentMinutes);
+            generatedSlots.push({ type: "period", number: p, name: periodNames[p - 1], start: startStr, end: endStr });
+            if (p === fushaAfterPeriod) {
+                let fushaStartStr = minutesToTimeString(currentMinutes); currentMinutes += fushaDuration; let fushaEndStr = minutesToTimeString(currentMinutes);
+                generatedSlots.push({ type: "fusha", start: fushaStartStr, end: fushaEndStr, duration: fushaDuration });
+            }
+        }
+        updateTableHeaders(); uploadCloudData();
+    }
+
+    function getCleanPeriodTimeText(periodNum) { let slot = generatedSlots.find(s => s.type === "period" && s.number === periodNum); return slot ? `(${slot.start} - ${slot.end})` : ''; }
+    function getPeriodTimeString(periodNum) { let text = getCleanPeriodTimeText(periodNum); return text ? `<span style="font-size:11px; display:block; color:#ffeb3b; font-weight:normal;">${text}</span>` : ''; }
+    function getFushaCleanTimeText() { let fushaSlot = generatedSlots.find(s => s.type === "fusha"); return fushaSlot ? `فسحة<br><span style="font-size: 9px; font-weight: normal; color: #78281f;">(${fushaSlot.start} - ${fushaSlot.end})</span>` : "فسحة مدرسية"; }
+
+    // دالة جلب البيانات المعزولة حسب اسم المعهد النشط
+    async function fetchCloudData() {
+        try {
+            const currentInstNode = getInstituteNodePath();
+            document.getElementById('dynamicHeaderTitle').innerText = document.getElementById('instName').value;
+            document.getElementById('syncStatus').innerText = "🔄 جاري مزامنة بيانات المعهد من السحابة...";
+            
+            const snapshot = await get(child(dbRef, currentInstNode));
+            if (snapshot.exists()) {
+                const cloudData = snapshot.val();
+                dualStructureSchedules = cloudData.dualStructureSchedules || { original: {}, alternative: {} };
+                classes = cloudData.classes || ["1/1", "1/2"];
+                subjects = cloudData.subjects || ["قرآن كريم", "لغة عربية"];
+                maxPeriods = cloudData.maxPeriods ? parseInt(cloudData.maxPeriods) : 7;
+                document.getElementById('maxPeriodsSelect').value = maxPeriods;
+                if(cloudData.startTimeInput) document.getElementById('startTimeInput').value = cloudData.startTimeInput;
+                if(cloudData.periodDurationInput) document.getElementById('periodDurationInput').value = cloudData.periodDurationInput;
+                if(cloudData.fushaDurationSelect) document.getElementById('fushaDurationSelect').value = cloudData.fushaDurationSelect;
+                if(cloudData.fushaPlaceSelect) document.getElementById('fushaPlaceSelect').value = cloudData.fushaPlaceSelect;
+                if (cloudData.teachers) teachers = cloudData.teachers;
+                document.getElementById('syncStatus').innerText = "🟢 متصل بالسحابة والبيانات معزولة للمعهد الحالي";
+            } else { 
+                // تهيئة بيانات افتراضية للمعهد الجديد
+                dualStructureSchedules = { original: {}, alternative: {} };
+                await uploadCloudData(); 
+            }
+            updateSelectDropdowns(); renderSideLists(); recalculateTimeSlots(); generateTableRows(); loadScheduleForClassAndType();
+        } catch (error) { document.getElementById('syncStatus').innerText = "🔴 خطأ في الربط: " + error.message; }
+    }
+
+    // دالة رفع البيانات إلى العقدة السحابية الخاصة بالمعهد
+    async function uploadCloudData() {
+        try {
+            const currentInstNode = getInstituteNodePath();
+            await set(ref(db, currentInstNode), {
+                dualStructureSchedules: dualStructureSchedules, classes: classes, subjects: subjects, teachers: teachers, maxPeriods: maxPeriods,
+                startTimeInput: document.getElementById('startTimeInput').value, periodDurationInput: document.getElementById('periodDurationInput').value,
+                fushaDurationSelect: document.getElementById('fushaDurationSelect').value, fushaPlaceSelect: document.getElementById('fushaPlaceSelect').value
+            });
+            document.getElementById('syncStatus').innerText = "🟢 تم الحفظ والمزامنة تلقائياً على خادم المعهد";
+        } catch (error) { console.error(error); }
+    }
+
+    // دالة لتغيير المعهد فوراً عند تعديل الاسم
+    window.triggerInstituteSwitch = function() {
+        fetchCloudData();
+    }
+
+    window.changePeriodsCount = function() {
+        maxPeriods = parseInt(document.getElementById('maxPeriodsSelect').value);
+        updateTableHeaders(); generateTableRows(); loadScheduleForClassAndType(); uploadCloudData();
+    }
+
+    function updateTableHeaders() {
+        const headZone = document.getElementById('tableHeadZone');
+        let headerHtml = `<tr><th style="width: 12%;">اليوم</th>`;
+        for (let p = 1; p <= maxPeriods; p++) { headerHtml += `<th>الحصة ${periodNames[p-1]} ${getPeriodTimeString(p)}</th>`; }
+        headerHtml += `</tr>`; headZone.innerHTML = headerHtml;
+    }
+
+    window.secureClearAllData = async function() {
+        if (prompt("🔒 الرقم السري الماستر:") === SECURITY_PIN && confirm("هل تريد تصفير البيانات الكلي للمعهد الحالي فقط؟")) {
+            dualStructureSchedules = { original: {}, alternative: {} }; await uploadCloudData(); loadScheduleForClassAndType();
+        }
+    }
+
+    window.exportDataToJSON = function() {
+        const fullData = { dualStructureSchedules, classes, subjects, teachers, maxPeriods, startTimeInput: document.getElementById('startTimeInput').value, periodDurationInput: document.getElementById('periodDurationInput').value, fushaDurationSelect: document.getElementById('fushaDurationSelect').value, fushaPlaceSelect: document.getElementById('fushaPlaceSelect').value };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 4));
+        const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", `جدول_${document.getElementById('instName').value}_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    window.importDataFromJSON = function(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (confirm("⚠️ هل تريد استبدال البيانات الحالية لهذا المعهد بالملف المستورد؟")) {
+                    dualStructureSchedules = parsed.dualStructureSchedules || dualStructureSchedules;
+                    classes = parsed.classes || classes; subjects = parsed.subjects || subjects; teachers = parsed.teachers || teachers;
+                    maxPeriods = parsed.maxPeriods ? parseInt(parsed.maxPeriods) : maxPeriods;
+                    await uploadCloudData(); fetchCloudData(); alert("✅ تم استيراد البيانات ورفعها بنجاح لمستودع المعهد!");
+                }
+            } catch (err) { alert("❌ ملف JSON تالف."); }
+        }; reader.readAsText(file); event.target.value = '';
+    }
+
+    window.addBulkItems = function(type) {
+        let textareaId = (type === 'class') ? 'bulkClassInput' : (type === 'subject') ? 'bulkSubjectInput' : 'bulkTeacherInput';
+        let rawText = document.getElementById(textareaId).value; if (!rawText.trim()) return;
+        rawText.split(/\r?\n/).forEach(line => {
+            let cleanItem = line.trim();
+            if (cleanItem) {
+                if (type === 'class' && !classes.includes(cleanItem)) classes.push(cleanItem);
+                else if (type === 'subject' && !subjects.includes(cleanItem)) subjects.push(cleanItem);
+                else if (type === 'teacher') {
+                    let parts = cleanItem.split(/[-—(]/); let name = parts[0].trim(); let subject = parts[1] ? parts[1].replace(")", "").trim() : "";
+                    if (!teachers.some(t => t.name === name)) teachers.push({ name, subject });
+                }
+            }
+        });
+        document.getElementById(textareaId).value = ''; updateSelectDropdowns(); renderSideLists(); loadScheduleForClassAndType(); uploadCloudData();
+    }
+
+    window.deleteItem = function(type, index) {
+        if (type === 'class') classes.splice(index, 1); else if (type === 'subject') subjects.splice(index, 1); else teachers.splice(index, 1);
+        updateSelectDropdowns(); renderSideLists(); loadScheduleForClassAndType(); uploadCloudData();
+    }
+
+    function updateSelectDropdowns() {
+        const optionsHtml = classes.map(c => `<option value="${c}">فصل ${c}</option>`).join('');
+        document.getElementById('classSelect').innerHTML = optionsHtml;
+        
+        document.getElementById('swapClass1').innerHTML = optionsHtml;
+        document.getElementById('swapClass2').innerHTML = optionsHtml;
+
+        const tOptionsHtml = teachers.map(t => `<option value="${t.name}">${t.name} ${t.subject ? `(${t.subject})` : ''}</option>`).join('');
+        document.getElementById('printTeacherSelect1').innerHTML = tOptionsHtml; document.getElementById('printTeacherSelect2').innerHTML = tOptionsHtml;
+        
+        updateSwapPeriodsOptions();
+    }
+
+    function updateSwapPeriodsOptions() {
+        let pOptions = "";
+        for (let p = 1; p <= maxPeriods; p++) {
+            pOptions += `<option value="${p}">الحصة ${periodNames[p-1]}</option>`;
+        }
+        document.getElementById('swapPeriod1').innerHTML = pOptions;
+        document.getElementById('swapPeriod2').innerHTML = pOptions;
+    }
+
+    function renderSideLists() {
+        document.getElementById('classesList').innerHTML = classes.map((c, i) => `<div class="list-item"><span>فصل ${c}</span><button class="btn-del-item" onclick="deleteItem('class', ${i})">×</button></div>`).join('');
+        document.getElementById('subjectsList').innerHTML = subjects.map((s, i) => `<div class="list-item"><span><b>${s}</b></span><button class="btn-del-item" onclick="deleteItem('subject', ${i})">×</button></div>`).join('');
+        document.getElementById('teachersList').innerHTML = teachers.map((t, i) => `<div class="list-item"><span><b>${t.name}</b> [${t.subject}]</span><button class="btn-del-item" onclick="deleteItem('teacher', ${i})">×</button></div>`).join('');
+    }
+
+    function generateTableRows() {
+        const tbody = document.getElementById('scheduleBody'); tbody.innerHTML = '';
+        const subOptions = `<option value="">- المادة -</option>` + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        const teachOptions = `<option value="">- المعلم -</option>` + teachers.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        
+        days.forEach(day => {
+            let rowHtml = `<tr><td style="font-weight:700; background-color:#f8fafc;">${day}</td>`;
+            for (let period = 1; period <= maxPeriods; period++) {
+                rowHtml += `<td>
+                    <div class="cell-container">
+                        <div class="half-slot-box">
+                            <span class="half-label">🌓 النصف 1:</span>
+                            <select class="select-schedule" id="sub1-${day}-${period}" onchange="syncCellToMemory('${day}', ${period})">${subOptions}</select>
+                            <select class="select-teacher" id="teach1-${day}-${period}" onchange="syncCellToMemory('${day}', ${period})">${teachOptions}</select>
+                        </div>
+                        <div class="half-slot-box second-half">
+                            <span class="half-label">🌗 النصف 2:</span>
+                            <select class="select-schedule" id="sub2-${day}-${period}" onchange="syncCellToMemory('${day}', ${period})">${subOptions}</select>
+                            <select class="select-teacher" id="teach2-${day}-${period}" onchange="syncCellToMemory('${day}', ${period})">${teachOptions}</select>
+                        </div>
+                    </div>
+                </td>`;
+            }
+            tbody.innerHTML += rowHtml + `</tr>`;
+        });
+    }
+
+    window.syncCellToMemory = function(day, period) {
+        const selectedClass = document.getElementById('classSelect').value;
+        const selectedType = document.getElementById('scheduleTypeSelect').value;
+        if (!selectedClass || !selectedType) return;
+        const safeClassKey = makeSafeKey(selectedClass);
+        if (!dualStructureSchedules[selectedType][safeClassKey]) dualStructureSchedules[selectedType][safeClassKey] = {};
+        
+        dualStructureSchedules[selectedType][safeClassKey][`${day}-${period}`] = {
+            sub1: document.getElementById(`sub1-${day}-${period}`).value,
+            teach1: document.getElementById(`teach1-${day}-${period}`).value,
+            sub2: document.getElementById(`sub2-${day}-${period}`).value,
+            teach2: document.getElementById(`teach2-${day}-${period}`).value
+        };
+    }
+
+    window.switchClass = function() { loadScheduleForClassAndType(); }
+    window.switchScheduleType = function() { loadScheduleForClassAndType(); }
+
+    function loadScheduleForClassAndType() {
+        const selectedClass = document.getElementById('classSelect').value;
+        const selectedType = document.getElementById('scheduleTypeSelect').value;
+        if (!selectedClass || !selectedType) return;
+        
+        document.getElementById('currentEditingTitle').innerText = `📍 تعديل جدول الحصص: فصل ${selectedClass} ⇚ [ ${(selectedType==='original'?'الجدول الأصلي':'الجدول البديل')} ]`;
+        const safeClassKey = makeSafeKey(selectedClass);
+        const classData = (dualStructureSchedules[selectedType] && dualStructureSchedules[selectedType][safeClassKey]) || {};
+        
+        days.forEach(day => {
+            for (let period = 1; period <= maxPeriods; period++) {
+                let cell = classData[`${day}-${period}`] || { sub1: "", teach1: "", sub2: "", teach2: "" };
+                if (document.getElementById(`sub1-${day}-${period}`)) {
+                    document.getElementById(`sub1-${day}-${period}`).value = cell.sub1 || '';
+                    document.getElementById(`teach1-${day}-${period}`).value = cell.teach1 || '';
+                    document.getElementById(`sub2-${day}-${period}`).value = cell.sub2 || '';
+                    document.getElementById(`teach2-${day}-${period}`).value = cell.teach2 || '';
+                }
+            }
+        });
+    }
+
+    window.saveCurrentSchedule = async function() {
+        const selectedClass = document.getElementById('classSelect').value;
+        const selectedType = document.getElementById('scheduleTypeSelect').value;
+        if (!selectedClass || !selectedType) return;
+        const safeClassKey = makeSafeKey(selectedClass);
+        if(!dualStructureSchedules[selectedType]) dualStructureSchedules[selectedType] = {};
+        dualStructureSchedules[selectedType][safeClassKey] = {};
+        
+        days.forEach(day => {
+            for (let period = 1; period <= maxPeriods; period++) {
+                dualStructureSchedules[selectedType][safeClassKey][`${day}-${period}`] = {
+                    sub1: document.getElementById(`sub1-${day}-${period}`).value,
+                    teach1: document.getElementById(`teach1-${day}-${period}`).value,
+                    sub2: document.getElementById(`sub2-${day}-${period}`).value,
+                    teach2: document.getElementById(`teach2-${day}-${period}`).value
+                };
+            }
+        });
+        await uploadCloudData(); alert("☁️ تم حفظ ومزامنة بيانات النصفين للفصل سحابياً بنجاح!");
+    }
+
+    window.openSwapModal = function() {
+        document.getElementById('swapModal').style.display = 'flex';
+    }
+    window.closeSwapModal = function() {
+        document.getElementById('swapModal').style.display = 'none';
+    }
+
+    window.executeSlotsSwap = async function() {
+        const currentType = document.getElementById('scheduleTypeSelect').value;
+        
+        const c1 = document.getElementById('swapClass1').value;
+        const d1 = document.getElementById('swapDay1').value;
+        const p1 = document.getElementById('swapPeriod1').value;
+        
+        const c2 = document.getElementById('swapClass2').value;
+        const d2 = document.getElementById('swapDay2').value;
+        const p2 = document.getElementById('swapPeriod2').value;
+
+        const key1 = makeSafeKey(c1);
+        const key2 = makeSafeKey(c2);
+        const cellKey1 = `${d1}-${p1}`;
+        const cellKey2 = `${d2}-${p2}`;
+
+        if (!dualStructureSchedules[currentType][key1]) dualStructureSchedules[currentType][key1] = {};
+        if (!dualStructureSchedules[currentType][key2]) dualStructureSchedules[currentType][key2] = {};
+
+        let cellData1 = dualStructureSchedules[currentType][key1][cellKey1] || { sub1: "", teach1: "", sub2: "", teach2: "" };
+        let cellData2 = dualStructureSchedules[currentType][key2][cellKey2] || { sub1: "", teach1: "", sub2: "", teach2: "" };
+
+        dualStructureSchedules[currentType][key1][cellKey1] = cellData2;
+        dualStructureSchedules[currentType][key2][cellKey2] = cellData1;
+
+        await uploadCloudData();
+        loadScheduleForClassAndType();
+        closeSwapModal();
+        
+        alert(`✅ تم بنجاح تبديل حصة [فصل ${c1} - يوم ${d1} - الحصة ${periodNames[p1-1]}] مع حصة [فصل ${c2} - يوم ${d2} - الحصة ${periodNames[p2-1]}] ومزامنتها سحابياً!`);
+    }
+
+    window.openStatsModal = function() {
+        const currentType = document.getElementById('scheduleTypeSelect').value;
+        const tbody = document.getElementById('statsTableBody'); tbody.innerHTML = '';
+        let teacherCounts = {}; teachers.forEach(t => { teacherCounts[t.name] = 0; });
+
+        if (dualStructureSchedules[currentType]) {
+            Object.keys(dualStructureSchedules[currentType]).forEach(classKey => {
+                let classData = dualStructureSchedules[currentType][classKey];
+                Object.keys(classData).forEach(cellKey => {
+                    let cell = classData[cellKey];
+                    if (cell) {
+                        let hasH1 = cell.sub1 && cell.teach1;
+                        let hasH2 = cell.sub2 && cell.teach2;
+                        
+                        if (hasH1 && !hasH2) {
+                            if (teacherCounts[cell.teach1] !== undefined) teacherCounts[cell.teach1] += 1.0;
+                        } else if (!hasH1 && hasH2) {
+                            if (teacherCounts[cell.teach2] !== undefined) teacherCounts[cell.teach2] += 1.0;
+                        } else if (hasH1 && hasH2) {
+                            if (cell.teach1 === cell.teach2) {
+                                if (teacherCounts[cell.teach1] !== undefined) teacherCounts[cell.teach1] += 1.0;
+                            } else {
+                                if (teacherCounts[cell.teach1] !== undefined) teacherCounts[cell.teach1] += 0.5;
+                                if (teacherCounts[cell.teach2] !== undefined) teacherCounts[cell.teach2] += 0.5;
+                            }
+                        }
+                    }
+                });
+            });
+        }
+        teachers.forEach(t => {
+            tbody.innerHTML += `<tr><td style="font-weight:bold;">${t.name}</td><td>${t.subject || 'عام'}</td><td><span style="background:#e8f8f5; padding:4px 10px; border-radius:10px; font-weight:bold;">${teacherCounts[t.name]} حصة</span></td></tr>`;
+        });
+        document.getElementById('statsModal').style.display = 'flex';
+    }
+    window.closeStatsModal = function() { document.getElementById('statsModal').style.display = 'none'; }
+
+    window.printFullInstituteMonthlySchedule = function() {
+        const currentType = document.getElementById('scheduleTypeSelect').value;
+        const fushaAfterPeriod = parseInt(document.getElementById('fushaPlaceSelect').value);
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`<html><head><style>body{font-family:'Cairo'; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse; font-size:11px;} th,td{border:1px solid #000; padding:6px; text-align:center; font-weight:bold;} th{background:#f2f2f2;} .half-print{border-bottom:1px dashed #777; padding-bottom:3px; margin-bottom:3px;} .class-block{page-break-after:always; margin-bottom:20px;}</style></head><body>`);
+        
+        classes.forEach(className => {
+            printWindow.document.write(`<div class="class-block"><h2>📅 جدول حصص فصل: ${className} - ${document.getElementById('instName').value}</h2><table><thead><tr><th>اليوم</th>`);
+            for (let p = 1; p <= maxPeriods; p++) { 
+                printWindow.document.write(`<th>الحصة ${periodNames[p-1]}</th>`); 
+                if(p===fushaAfterPeriod) printWindow.document.write(`<th style="background:#ffeeba;">الفسحة</th>`);
+            }
+            printWindow.document.write(`</tr></thead><tbody>`);
+            
+            days.forEach(day => {
+                printWindow.document.write(`<tr><td>${day}</td>`);
+                for (let period = 1; period <= maxPeriods; period++) {
+                    let cell = (dualStructureSchedules[currentType] && dualStructureSchedules[currentType][makeSafeKey(className)] && dualStructureSchedules[currentType][makeSafeKey(className)][`${day}-${period}`]) || {sub1:"", teach1:"", sub2:"", teach2:""};
+                    
+                    let content = "";
+                    let hasH1 = cell.sub1 && cell.teach1;
+                    let hasH2 = cell.sub2 && cell.teach2;
+
+                    if (hasH1 && !hasH2) {
+                        content = `<div style="font-size:13px; color:#2980b9;">${cell.sub1} <br><span style="font-size:10px; font-weight:normal; color:#555;">(${cell.teach1})</span></div>`;
+                    } else if (!hasH1 && hasH2) {
+                        content = `<div style="font-size:13px; color:#2980b9;">${cell.sub2} <br><span style="font-size:10px; font-weight:normal; color:#555;">(${cell.teach2})</span></div>`;
+                    } else if (hasH1 && hasH2) {
+                        if (cell.sub1 === cell.sub2 && cell.teach1 === cell.teach2) {
+                            content = `<div style="font-size:13px; color:#2980b9;">${cell.sub1} <br><span style="font-size:10px; font-weight:normal; color:#555;">(${cell.teach1})</span></div>`;
+                        } else {
+                            let p1 = `<div class="half-print">🌓 ن1: ${cell.sub1} (${cell.teach1 || '-'})</div>`;
+                            let p2 = `<div>🌗 ن2: ${cell.sub2} (${cell.teach2 || '-'})</div>`;
+                            content = p1 + p2;
+                        }
+                    } else { content = "-"; }
+                    
+                    printWindow.document.write(`<td>${content}</td>`);
+                    if(period===fushaAfterPeriod) printWindow.document.write(`<td style="background:#fff3cd;">${getFushaCleanTimeText()}</td>`);
+                }
+                printWindow.document.write(`</tr>`);
+            });
+            printWindow.document.write(`</tbody></table></div>`);
+        });
+        printWindow.document.write(`</body></html>`); printWindow.document.close(); printWindow.print();
+    }
+
+    window.printFullInstituteDailySchedule = function() {
+        const currentType = document.getElementById('scheduleTypeSelect').value;
+        const fushaAfterPeriod = parseInt(document.getElementById('fushaPlaceSelect').value);
+        let printWindow = window.open('', '_blank');
+        
+        printWindow.document.write(`<html><head><title>كشف المتابعة اليومي الموحد</title><style>body{font-family:'Cairo'; direction:rtl; padding:15px;} .day-block{page-break-after:always; margin-bottom:30px;} h2{text-align:center; color:#2c3e50; border-bottom:2px solid #2980b9; padding-bottom:8px;} table{width:100%; border-collapse:collapse; font-size:11px; margin-top:10px;} th,td{border:1px solid #000; padding:6px; text-align:center; font-weight:bold;} th{background:#eef4f8; color:#1f618d;} .single-subject-box{font-size:12px; font-weight:700; color:#2c3e50; line-height:1.4;} .single-teacher-name{color:#555; font-size:10px; font-weight:normal; display:block;} .halves-container{display:flex; justify-content:space-between; gap:4px; width:100%; height:100%; min-height:36px; align-items:stretch;} .half-item-horizontal{flex:1; font-size:10px; background:#f9f9f9; padding:4px 2px; border-radius:4px; display:flex; flex-direction:column; justify-content:center; align-items:center; border:1px dotted #ccc;} .half-item-horizontal.h1-border{border-left:2px solid #2980b9;} .half-item-horizontal.h2-border{border-right:2px solid #27ae60; background:#fcfdfc;}</style></head><body>`);
+        
+        days.forEach(day => {
+            printWindow.document.write(`<div class="day-block"><h2>📋 كشف المتابعة والإشراف اليومي الموحد - [ ${document.getElementById('instName').value} ] - يوم [ ${day} ]</h2><table><thead><tr><th style="width:10%;">الفصل / الحصة</th>`);
+            for (let p = 1; p <= maxPeriods; p++) {
+                printWindow.document.write(`<th>الحصة ${periodNames[p-1]}</th>`);
+                if(p === fushaAfterPeriod) printWindow.document.write(`<th style="background:#fff3cd; color:#78281f; width:8%;">الفسحة المدرسية</th>`);
+            }
+            printWindow.document.write(`</tr></thead><tbody>`);
+            
+            classes.forEach(className => {
+                printWindow.document.write(`<tr><td style="background:#fcfcfc; color:#2980b9;"><b>فصل ${className}</b></td>`);
+                for (let period = 1; period <= maxPeriods; period++) {
+                    let cell = (dualStructureSchedules[currentType] && dualStructureSchedules[currentType][makeSafeKey(className)] && dualStructureSchedules[currentType][makeSafeKey(className)][`${day}-${period}`]) || {sub1:"", teach1:"", sub2:"", teach2:""};
+                    
+                    let cellContent = "";
+                    let hasH1 = cell.sub1 && cell.teach1;
+                    let hasH2 = cell.sub2 && cell.teach2;
+                    
+                    if (!hasH1 && !hasH2) {
+                        cellContent = `<span style="color:#aaa; font-weight:normal;">-</span>`;
+                    }
+                    else if (hasH1 && !hasH2) {
+                        cellContent = `<div class="single-subject-box">${cell.sub1}<span class="single-teacher-name">(${cell.teach1})</span></div>`;
+                    }
+                    else if (!hasH1 && hasH2) {
+                        cellContent = `<div class="single-subject-box">${cell.sub2}<span class="single-teacher-name">(${cell.teach2})</span></div>`;
+                    }
+                    else if (cell.sub1 === cell.sub2 && cell.teach1 === cell.teach2) {
+                        cellContent = `<div class="single-subject-box">${cell.sub1}<span class="single-teacher-name">(${cell.teach1})</span></div>`;
+                    }
+                    else {
+                        cellContent += `<div class="halves-container">`;
+                        cellContent += `<div class="half-item-horizontal h1-border"><span><b>ن1:</b> ${cell.sub1 || '-'}</span><span style="color:#555; font-size:9px; font-weight:normal;">(${cell.teach1 || 'بدون'})</span></div>`;
+                        cellContent += `<div class="half-item-horizontal h2-border"><span><b>ن2:</b> ${cell.sub2 || '-'}</span><span style="color:#555; font-size:9px; font-weight:normal;">(${cell.teach2 || 'بدون'})</span></div>`;
+                        cellContent += `</div>`;
+                    }
+                    
+                    printWindow.document.write(`<td>${cellContent}</td>`);
+                    if(period === fushaAfterPeriod) {
+                        printWindow.document.write(`<td style="background:#fffdf3; color:#78281f; font-size:10px;">☕ فسحة</td>`);
+                    }
+                }
+                printWindow.document.write(`</tr>`);
+            });
+            
+            printWindow.document.write(`</tbody></table></div>`);
+        });
+        
+        printWindow.document.write(`</body></html>`);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    window.printDoubleTeacherTeacherSchedule = function() {
+        const t1 = document.getElementById('printTeacherSelect1').value;
+        const t2 = document.getElementById('printTeacherSelect2').value;
+        const currentType = document.getElementById('scheduleTypeSelect').value;
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`<html><head><style>body{font-family:'Cairo'; direction:rtl; padding:20px;} table{width:100%; border-collapse:collapse; margin-bottom:20px;} th,td{border:1px solid #000; padding:8px; text-align:center; font-weight:bold;} th{background:#eafaf1;}</style></head><body>`);
+        
+        [t1, t2].forEach(teacherName => {
+            printWindow.document.write(`<h3>👨‍🏫 جدول حصص الأستاذ: ${teacherName} - ${document.getElementById('instName').value}</h3><table><thead><tr><th>اليوم</th>`);
+            for(let p=1; p<=maxPeriods; p++) printWindow.document.write(`<th>الحصة ${periodNames[p-1]}</th>`);
+            printWindow.document.write(`</tr></thead><tbody>`);
+            
+            days.forEach(day => {
+                printWindow.document.write(`<tr><td>${day}</td>`);
+                for (let period = 1; period <= maxPeriods; period++) {
+                    let textMatches = [];
+                    classes.forEach(c => {
+                        let cell = (dualStructureSchedules[currentType] && dualStructureSchedules[currentType][makeSafeKey(c)] && dualStructureSchedules[currentType][makeSafeKey(c)][`${day}-${period}`]) || null;
+                        if(cell) {
+                            let hasH1 = cell.sub1 && cell.teach1;
+                            let hasH2 = cell.sub2 && cell.teach2;
+                            
+                            if (hasH1 && !hasH2 && cell.teach1 === teacherName) {
+                                textMatches.push(`فصل ${c} (${cell.sub1})`);
+                            } else if (!hasH1 && hasH2 && cell.teach2 === teacherName) {
+                                textMatches.push(`فصل ${c} (${cell.sub2})`);
+                            } else if (hasH1 && hasH2) {
+                                if (cell.teach1 === teacherName && cell.teach2 === teacherName) {
+                                    textMatches.push(`فصل ${c} (${cell.sub1})`);
+                                } else {
+                                    if(cell.teach1 === teacherName) textMatches.push(`فصل ${c} (نصف 1 - ${cell.sub1})`);
+                                    if(cell.teach2 === teacherName) textMatches.push(`فصل ${c} (نصف 2 - ${cell.sub2})`);
+                                }
+                            }
+                        }
+                    });
+                    printWindow.document.write(`<td>${textMatches.length > 0 ? textMatches.join(" + ") : "-"}</td>`);
+                }
+                printWindow.document.write(`</tr>`);
+            });
+            printWindow.document.write(`</tbody></table>`);
+        });
+        printWindow.document.write(`</body></html>`); printWindow.document.close(); printWindow.print();
+    }
+
+    // فحص وتأكيد التفعيل فور فتح الملف
+    checkSystemActivation();
+</script>
+</body>
+</html>
