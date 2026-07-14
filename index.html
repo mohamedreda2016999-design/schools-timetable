@@ -108,7 +108,7 @@
             padding: 20px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-            display: none; /* مخفية حتى يتم التحقق */
+            display: none;
         }
 
         .header-logo {
@@ -151,7 +151,7 @@
         
         @media (min-width: 1200px) {
             body { padding: 25px; }
-            .container { padding: 35px; display: none; }
+            .container { padding: 35px; }
             .workspace { grid-template-columns: 3.2fr 1.2fr; }
             .header-logo h1 { font-size: 28px; }
         }
@@ -298,11 +298,6 @@
             background-color: #fcfcfc;
             margin-top: 2px;
         }
-        .half-slot-box.second-half {
-            border-top: 2px dashed var(--primary);
-            background-color: #fcfcfc;
-            margin-top: 2px;
-        }
         .half-label {
             font-size: 10px;
             font-weight: 800;
@@ -368,6 +363,7 @@
             margin-top: 8px;
             padding: 6px;
         }
+        .list-box id { font-weight: bold; }
         .list-item {
             display: flex;
             justify-content: space-between;
@@ -472,7 +468,7 @@
                         <input type="number" id="periodDurationInput" value="45" min="20" max="90" onchange="recalculateTimeSlots()">
                     </div>
                     <div class="setup-group">
-                        <label> Sandwich مدة الفسحة المدرسية:</label>
+                        <label> مدة الفسحة المدرسية:</label>
                         <select id="fushaDurationSelect" onchange="recalculateTimeSlots()">
                             <option value="10">١٠ دقائق</option>
                             <option value="15">١٥ دقيقة</option>
@@ -586,7 +582,8 @@
                     <label>🏛️ الفصل الأول:</label>
                     <select id="swapClass1"></select>
                 </div>
-                <div class="swap-section-title">📅 اليوم:</label>
+                <div class="setup-group">
+                    <label>📅 اليوم:</label>
                     <select id="swapDay1">
                         <option value="الأحد">الأحد</option>
                         <option value="الإثنين">الإثنين</option>
@@ -607,7 +604,8 @@
                     <label>🏛️ الفصل الثاني:</label>
                     <select id="swapClass2"></select>
                 </div>
-                <div class="swap-section-title">📅 اليوم:</label>
+                <div class="setup-group">
+                    <label>📅 اليوم:</label>
                     <select id="swapDay2">
                         <option value="الأحد">الأحد</option>
                         <option value="الإثنين">الإثنين</option>
@@ -656,10 +654,10 @@
 
     function makeSafeKey(name) { return name.replace(/[\/\.\#\$\[\]]/g, '-'); }
 
-    // دالة الحصول على المسار السحابي المعزول لكل معهد بناءً على اسمه الحركي
     function getInstituteNodePath() {
-        const instName = document.getElementById('instName').value.trim() || "معهد-افتراضي";
-        return "institutes/" + makeSafeKey(instName);
+        const activeCode = localStorage.getItem('current_active_code') || "default_code";
+        const instName = document.getElementById('instName').value.trim() || "default_institute";
+        return "institutes/" + activeCode + "_" + makeSafeKey(instName);
     }
 
     function checkSystemActivation() {
@@ -693,20 +691,21 @@
                 if(status === "true" || status === true || status === "active") {
                     succElement.style.display = 'block';
                     localStorage.setItem('system_is_activated', 'true');
+                    localStorage.setItem('current_active_code', inputCode); 
                     setTimeout(() => {
                         checkSystemActivation();
                     }, 1500);
                 } else {
-                    errElement.innerText = "❌ كود التفعيل منتهي الصلاحية أو تم إيقافه على الرابط الجديد!";
+                    errElement.innerText = "❌ كود التفعيل منتهي الصلاحية أو تم إيقافه!";
                     errElement.style.display = 'block';
                 }
             } else {
-                errElement.innerText = "❌ كود التفعيل غير صحيح أو غير موجود بالخادم الجديد!";
+                errElement.innerText = "❌ كود التفعيل غير صحيح أو غير موجود بالخادم!";
                 errElement.style.display = 'block';
             }
         }).catch((err) => {
             console.error(err);
-            errElement.innerText = "❌ حدث خطأ، تأكد من إعدادات الـ Rules في Firebase للمسار الجديد.";
+            errElement.innerText = "❌ حدث خطأ في الاتصال، يرجى التحقق من القواعد.";
             errElement.style.display = 'block';
         });
     });
@@ -732,14 +731,13 @@
                 generatedSlots.push({ type: "fusha", start: fushaStartStr, end: fushaEndStr, duration: fushaDuration });
             }
         }
-        updateTableHeaders(); uploadCloudData();
+        updateTableHeaders();
     }
 
     function getCleanPeriodTimeText(periodNum) { let slot = generatedSlots.find(s => s.type === "period" && s.number === periodNum); return slot ? `(${slot.start} - ${slot.end})` : ''; }
     function getPeriodTimeString(periodNum) { let text = getCleanPeriodTimeText(periodNum); return text ? `<span style="font-size:11px; display:block; color:#ffeb3b; font-weight:normal;">${text}</span>` : ''; }
     function getFushaCleanTimeText() { let fushaSlot = generatedSlots.find(s => s.type === "fusha"); return fushaSlot ? `فسحة<br><span style="font-size: 9px; font-weight: normal; color: #78281f;">(${fushaSlot.start} - ${fushaSlot.end})</span>` : "فسحة مدرسية"; }
 
-    // دالة جلب البيانات المعزولة حسب اسم المعهد النشط
     async function fetchCloudData() {
         try {
             const currentInstNode = getInstituteNodePath();
@@ -761,7 +759,6 @@
                 if (cloudData.teachers) teachers = cloudData.teachers;
                 document.getElementById('syncStatus').innerText = "🟢 متصل بالسحابة والبيانات معزولة للمعهد الحالي";
             } else { 
-                // تهيئة بيانات افتراضية للمعهد الجديد
                 dualStructureSchedules = { original: {}, alternative: {} };
                 await uploadCloudData(); 
             }
@@ -769,7 +766,6 @@
         } catch (error) { document.getElementById('syncStatus').innerText = "🔴 خطأ في الربط: " + error.message; }
     }
 
-    // دالة رفع البيانات إلى العقدة السحابية الخاصة بالمعهد
     async function uploadCloudData() {
         try {
             const currentInstNode = getInstituteNodePath();
@@ -782,7 +778,6 @@
         } catch (error) { console.error(error); }
     }
 
-    // دالة لتغيير المعهد فوراً عند تعديل الاسم
     window.triggerInstituteSwitch = function() {
         fetchCloudData();
     }
@@ -1193,7 +1188,6 @@
         printWindow.document.write(`</body></html>`); printWindow.document.close(); printWindow.print();
     }
 
-    // فحص وتأكيد التفعيل فور فتح الملف
     checkSystemActivation();
 </script>
 </body>
